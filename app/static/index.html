@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>AI Travel Planner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #171717;
+      --muted: #71717a;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --border: #e4e4e7;
+      --soft: #dbeafe;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      padding: 28px 40px;
+      background: linear-gradient(135deg, #172554, #2563eb);
+      color: white;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 38px;
+    }
+
+    header p {
+      margin: 0;
+      max-width: 720px;
+      color: #dbeafe;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 24px;
+      padding: 24px 40px 40px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+      padding: 22px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin: 14px 0 6px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      font: inherit;
+      background: white;
+    }
+
+    textarea { min-height: 84px; resize: vertical; }
+
+    button {
+      margin-top: 18px;
+      width: 100%;
+      padding: 14px 18px;
+      border: 0;
+      border-radius: 16px;
+      background: var(--primary);
+      color: white;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover { background: var(--primary-dark); }
+
+    .hint {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .chips {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #fafafa;
+      font-size: 14px;
+    }
+
+    .empty {
+      min-height: 420px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .summary-item {
+      padding: 14px;
+      background: var(--soft);
+      border-radius: 18px;
+    }
+
+    .summary-item strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .day {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    .day h3 { margin: 0 0 12px; }
+
+    .activity {
+      display: grid;
+      grid-template-columns: 120px 1fr auto;
+      gap: 14px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+
+    .time {
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .activity h4 {
+      margin: 0 0 6px;
+    }
+
+    .activity p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .badge {
+      align-self: start;
+      padding: 7px 10px;
+      background: #f4f4f5;
+      border-radius: 999px;
+      white-space: nowrap;
+      color: #3f3f46;
+      font-size: 13px;
+    }
+
+    .alternatives {
+      display: grid;
+      gap: 8px;
+      padding-left: 18px;
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; padding: 20px; }
+      header { padding: 24px 20px; }
+      .summary { grid-template-columns: 1fr; }
+      .activity { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>AI Travel Planner</h1>
+  <p>Create a personalized day-by-day travel itinerary based on destination, dates, budget, travel style and interests.</p>
+</header>
+
+<div class="layout">
+  <section class="card">
+    <h2>Create trip</h2>
+    <p class="hint">This is an MVP prototype. The backend returns a mock AI-generated itinerary.</p>
+
+    <label for="destination">Destination</label>
+    <input id="destination" value="Paris" placeholder="Paris, Tokyo, Rome...">
+
+    <label for="startDate">Start date</label>
+    <input id="startDate" type="date" value="2026-06-01">
+
+    <label for="endDate">End date</label>
+    <input id="endDate" type="date" value="2026-06-03">
+
+    <label for="budget">Budget</label>
+    <select id="budget">
+      <option value="low">low</option>
+      <option value="medium" selected>medium</option>
+      <option value="high">high</option>
+    </select>
+
+    <label for="style">Travel style</label>
+    <select id="style">
+      <option value="relaxed">relaxed</option>
+      <option value="balanced" selected>balanced</option>
+      <option value="intensive">intensive</option>
+    </select>
+
+    <label>Interests</label>
+    <div class="chips">
+      <label class="chip"><input type="checkbox" value="museums" checked> museums</label>
+      <label class="chip"><input type="checkbox" value="food" checked> food</label>
+      <label class="chip"><input type="checkbox" value="architecture" checked> architecture</label>
+      <label class="chip"><input type="checkbox" value="nature"> nature</label>
+      <label class="chip"><input type="checkbox" value="shopping"> shopping</label>
+      <label class="chip"><input type="checkbox" value="nightlife"> nightlife</label>
+    </div>
+
+    <label for="restrictions">Restrictions / notes</label>
+    <textarea id="restrictions" placeholder="no long walks, accessible route, vegetarian food...">no long walks</textarea>
+
+    <button onclick="generateItinerary()">Generate itinerary</button>
+  </section>
+
+  <section class="card" id="result">
+    <div class="empty">
+      <div>
+        <h2>Your itinerary will appear here</h2>
+        <p>Fill in the form and click “Generate itinerary”.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  function selectedInterests() {
+    return Array.from(document.querySelectorAll('.chip input:checked')).map(item => item.value);
+  }
+
+  async function generateItinerary() {
+    const payload = {
+      destination: document.getElementById('destination').value,
+      start_date: document.getElementById('startDate').value,
+      end_date: document.getElementById('endDate').value,
+      budget: document.getElementById('budget').value,
+      travel_style: document.getElementById('style').value,
+      interests: selectedInterests(),
+      restrictions: document.getElementById('restrictions').value
+    };
+
+    const result = document.getElementById('result');
+    result.innerHTML = '<div class="empty"><h2>Generating itinerary...</h2></div>';
+
+    const response = await fetch('/api/generate-itinerary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      result.innerHTML = '<div class="empty"><h2>Something went wrong</h2><p>Check input data and try again.</p></div>';
+      return;
+    }
+
+    const data = await response.json();
+    renderItinerary(data);
+  }
+
+  function renderItinerary(data) {
+    const result = document.getElementById('result');
+
+    const daysHtml = data.days.map(day => `
+      <div class="day">
+        <h3>${day.summary}</h3>
+        ${day.activities.map(activity => `
+          <div class="activity">
+            <div class="time">${activity.time}</div>
+            <div>
+              <h4>${activity.title}</h4>
+              <p>${activity.description}</p>
+            </div>
+            <div class="badge">${activity.estimated_cost}</div>
+          </div>
+        `).join('')}
+      </div>
+    `).join('');
+
+    const alternativesHtml = data.alternatives.map(item => `<li>${item}</li>`).join('');
+
+    result.innerHTML = `
+      <h2>${data.destination} itinerary</h2>
+      <div class="summary">
+        <div class="summary-item"><strong>Dates</strong>${data.dates}</div>
+        <div class="summary-item"><strong>Budget</strong>${data.budget}</div>
+        <div class="summary-item"><strong>Style</strong>${data.travel_style}</div>
+      </div>
+      <p class="hint"><strong>Pace:</strong> ${data.pace_note}</p>
+      <p class="hint"><strong>Budget note:</strong> ${data.budget_note}</p>
+      <p class="hint"><strong>Restrictions:</strong> ${data.restrictions_note}</p>
+      ${daysHtml}
+      <div class="day">
+        <h3>Alternative suggestions</h3>
+        <ul class="alternatives">${alternativesHtml}</ul>
+      </div>
+    `;
+  }
+</script>
+</body>
+</html>
