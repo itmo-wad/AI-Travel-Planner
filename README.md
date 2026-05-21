@@ -6,11 +6,10 @@ The prototype demonstrates the core MVP idea:
 
 - user enters destination, dates, budget, travel style and interests
 - backend receives trip preferences
-- mock AI service generates a structured day-by-day itinerary
+- OpenRouter streams a structured day-by-day itinerary to the backend
 - frontend displays the itinerary in a clean travel-planner UI
 
-This version intentionally uses a **mock AI response** instead of a real LLM call.  
-It is enough for discussion, architecture presentation and UI/UX demo.
+Set `OPENROUTER_API_KEY` in your shell or in a local `.env` file before running the backend.
 
 ## Stack
 
@@ -18,16 +17,27 @@ It is enough for discussion, architecture presentation and UI/UX demo.
 - FastAPI
 - HTML / CSS / JavaScript
 - SPA-like frontend
-- Mock AI service
+- OpenRouter API
 
 ## Run
 
 ```powershell
-python -m venv .venv
-Set-ExecutionPolicy -Scope Process Bypass
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+$env:OPENROUTER_API_KEY="your_openrouter_key"
+uv run uvicorn app.main:app --reload
+```
+
+`.env` example:
+
+```text
+OPENROUTER_API_KEY=your_openrouter_key
+OPENROUTER_MODEL=openai/gpt-5.2
+```
+
+Optional:
+
+```powershell
+$env:OPENROUTER_MODEL="openai/gpt-5.2"
+$env:LOG_LEVEL="DEBUG"
 ```
 
 Open:
@@ -54,7 +64,7 @@ Request example:
 }
 ```
 
-Returns a structured mock itinerary.
+Returns a structured AI-generated itinerary.
 
 ## Project idea
 

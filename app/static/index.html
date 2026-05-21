@@ -88,6 +88,10 @@
     }
 
     button:hover { background: var(--primary-dark); }
+    button:disabled {
+      cursor: wait;
+      opacity: 0.72;
+    }
 
     .hint {
       color: var(--muted);
@@ -119,6 +123,28 @@
       place-items: center;
       text-align: center;
       color: var(--muted);
+    }
+
+    .loading-state {
+      min-height: 420px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .spinner {
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 18px;
+      border: 5px solid var(--soft);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
     .summary {
@@ -206,7 +232,7 @@
 <div class="layout">
   <section class="card">
     <h2>Create trip</h2>
-    <p class="hint">This is an MVP prototype. The backend returns a mock AI-generated itinerary.</p>
+    <p class="hint">This is an MVP prototype. The backend asks OpenRouter to generate a structured AI itinerary.</p>
 
     <label for="destination">Destination</label>
     <input id="destination" value="Paris" placeholder="Paris, Tokyo, Rome...">
@@ -244,7 +270,7 @@
     <label for="restrictions">Restrictions / notes</label>
     <textarea id="restrictions" placeholder="no long walks, accessible route, vegetarian food...">no long walks</textarea>
 
-    <button onclick="generateItinerary()">Generate itinerary</button>
+    <button id="generateButton" onclick="generateItinerary()">Generate itinerary</button>
   </section>
 
   <section class="card" id="result">
@@ -262,6 +288,39 @@
     return Array.from(document.querySelectorAll('.chip input:checked')).map(item => item.value);
   }
 
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    }[character]));
+  }
+
+  function renderLoading() {
+    document.getElementById('result').innerHTML = `
+      <div class="loading-state" aria-live="polite">
+        <div>
+          <div class="spinner" aria-hidden="true"></div>
+          <h2>Generating itinerary...</h2>
+          <p>OpenRouter is building a personalized day-by-day plan.</p>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderError(message) {
+    document.getElementById('result').innerHTML = `
+      <div class="empty">
+        <div>
+          <h2>Something went wrong</h2>
+          <p>${escapeHtml(message || 'Check input data and try again.')}</p>
+        </div>
+      </div>
+    `;
+  }
+
   async function generateItinerary() {
     const payload = {
       destination: document.getElementById('destination').value,
@@ -273,22 +332,31 @@
       restrictions: document.getElementById('restrictions').value
     };
 
-    const result = document.getElementById('result');
-    result.innerHTML = '<div class="empty"><h2>Generating itinerary...</h2></div>';
+    const button = document.getElementById('generateButton');
+    button.disabled = true;
+    button.textContent = 'Generating...';
+    renderLoading();
 
-    const response = await fetch('/api/generate-itinerary', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    try {
+      const response = await fetch('/api/generate-itinerary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
 
-    if (!response.ok) {
-      result.innerHTML = '<div class="empty"><h2>Something went wrong</h2><p>Check input data and try again.</p></div>';
-      return;
+      const data = await response.json();
+      if (!response.ok) {
+        renderError(data.detail || 'Check input data and try again.');
+        return;
+      }
+
+      renderItinerary(data);
+    } catch (error) {
+      renderError('Network error while contacting the backend.');
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Generate itinerary';
     }
-
-    const data = await response.json();
-    renderItinerary(data);
   }
 
   function renderItinerary(data) {
@@ -296,32 +364,32 @@
 
     const daysHtml = data.days.map(day => `
       <div class="day">
-        <h3>${day.summary}</h3>
+        <h3>${escapeHtml(day.summary)}</h3>
         ${day.activities.map(activity => `
           <div class="activity">
-            <div class="time">${activity.time}</div>
+            <div class="time">${escapeHtml(activity.time)}</div>
             <div>
-              <h4>${activity.title}</h4>
-              <p>${activity.description}</p>
+              <h4>${escapeHtml(activity.title)}</h4>
+              <p>${escapeHtml(activity.description)}</p>
             </div>
-            <div class="badge">${activity.estimated_cost}</div>
+            <div class="badge">${escapeHtml(activity.estimated_cost)}</div>
           </div>
         `).join('')}
       </div>
     `).join('');
 
-    const alternativesHtml = data.alternatives.map(item => `<li>${item}</li>`).join('');
+    const alternativesHtml = data.alternatives.map(item => `<li>${escapeHtml(item)}</li>`).join('');
 
     result.innerHTML = `
-      <h2>${data.destination} itinerary</h2>
+      <h2>${escapeHtml(data.destination)} itinerary</h2>
       <div class="summary">
-        <div class="summary-item"><strong>Dates</strong>${data.dates}</div>
-        <div class="summary-item"><strong>Budget</strong>${data.budget}</div>
-        <div class="summary-item"><strong>Style</strong>${data.travel_style}</div>
+        <div class="summary-item"><strong>Dates</strong>${escapeHtml(data.dates)}</div>
+        <div class="summary-item"><strong>Budget</strong>${escapeHtml(data.budget)}</div>
+        <div class="summary-item"><strong>Style</strong>${escapeHtml(data.travel_style)}</div>
       </div>
-      <p class="hint"><strong>Pace:</strong> ${data.pace_note}</p>
-      <p class="hint"><strong>Budget note:</strong> ${data.budget_note}</p>
-      <p class="hint"><strong>Restrictions:</strong> ${data.restrictions_note}</p>
+      <p class="hint"><strong>Pace:</strong> ${escapeHtml(data.pace_note)}</p>
+      <p class="hint"><strong>Budget note:</strong> ${escapeHtml(data.budget_note)}</p>
+      <p class="hint"><strong>Restrictions:</strong> ${escapeHtml(data.restrictions_note)}</p>
       ${daysHtml}
       <div class="day">
         <h3>Alternative suggestions</h3>
