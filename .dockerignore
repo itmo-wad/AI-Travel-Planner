@@ -1,0 +1,12 @@
+.codex
+.env
+.git
+.gitignore
+.pytest_cache
+.ruff_cache
+.venv
+__pycache__
+*.py[cod]
+*.log
+Dockerfile
+docker-compose.yml

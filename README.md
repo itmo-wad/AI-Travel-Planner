@@ -42,13 +42,23 @@ Open the app:
 http://localhost:8000
 ```
 
+## Docker
+
+Build and run the app:
+
+```bash
+docker compose up --build
+```
+
+Open the app:
+
+```text
+http://localhost:8000
+```
+
 ## Configuration
 
 `OPENROUTER_API_KEY` is required.
-
-`OPENROUTER_MODEL` is optional. If it is not set, the backend uses `openrouter/free`.
-
-`LOG_LEVEL` is optional. It defaults to `INFO`.
 
 The backend currently uses async streaming with a 90-second OpenRouter timeout and retries retryable OpenRouter failures, including 504 stream aborts, up to 3 attempts.
 
